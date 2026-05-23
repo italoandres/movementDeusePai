@@ -20,7 +20,7 @@ export async function GET() {
             title: 'Não Ore. Fale com o Pai.',
             description: 'Livro digital + acesso ao app O Secreto',
             quantity: 1,
-            unit_price: 47.00,
+            unit_price: 1.00,
             currency_id: 'BRL',
           },
         ],
