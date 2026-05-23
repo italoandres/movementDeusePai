@@ -61,6 +61,6 @@ export const config = {
      * - auth routes (login, signup)
      * - landing page (/)
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$|login|signup|$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|app/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|js|json|wasm|css|otf|ttf|woff|frag)$|login|signup|$).*)',
   ],
 };
