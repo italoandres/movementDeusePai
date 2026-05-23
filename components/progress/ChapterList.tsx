@@ -90,7 +90,7 @@ export default function ChapterList({
                     }
                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-900
                   `}
-                  aria-label={`Capítulo ${(chapterProgress.chapter as any).order_index || ''}: ${chapterProgress.chapter.title}${isCompleted ? ', completado' : ''}${isLocked ? ', bloqueado' : ''}${isCurrentChapter ? ', atual' : ''}`}
+                  aria-label={`Capítulo ${chapterProgress.chapter.title}${isCompleted ? ', completado' : ''}${isLocked ? ', bloqueado' : ''}${isCurrentChapter ? ', atual' : ''}`}
                   aria-current={isCurrentChapter ? 'page' : undefined}
                   aria-disabled={isLocked}
                 >
