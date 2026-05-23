@@ -137,7 +137,7 @@ export default function ChapterList({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-xs sm:text-sm font-medium text-zinc-400">
-                            Capítulo {chapterProgress.chapter.order_index}
+                            Capítulo {chapterProgress.chapter.chapter_number}
                           </span>
                           {isCurrentChapter && (
                             <span className="text-xs px-2 py-0.5 bg-blue-600/20 text-blue-400 rounded-full whitespace-nowrap">
