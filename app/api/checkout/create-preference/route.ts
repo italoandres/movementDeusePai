@@ -37,9 +37,9 @@ export async function POST(request: NextRequest) {
           email,
         },
         back_urls: {
-          success: `${appUrl}/app/#/obrigado`,
+          success: `${appUrl}/api/checkout/redirect`,
           failure: `${appUrl}/app/#/journey/sales`,
-          pending: `${appUrl}/app/#/obrigado`,
+          pending: `${appUrl}/api/checkout/redirect`,
         },
         auto_return: 'approved',
         notification_url: `${appUrl}/api/webhooks/mercadopago`,

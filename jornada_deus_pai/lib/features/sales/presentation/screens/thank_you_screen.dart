@@ -107,11 +107,23 @@ class _ThankYouScreenState extends ConsumerState<ThankYouScreen>
     });
 
     try {
-      // Step 1: Validate purchase exists for this email
-      final hasPurchase =
-          await ProfileService.instance.validatePurchaseByEmail(email);
+      // Step 1: Validate purchase exists for this email (with retry)
+      // The webhook may not have processed yet, so we retry up to 3 times
+      bool hasPurchase = false;
+      for (int attempt = 0; attempt < 3; attempt++) {
+        hasPurchase =
+            await ProfileService.instance.validatePurchaseByEmail(email);
+        if (hasPurchase) break;
+        // Wait 2 seconds before retry (webhook might still be processing)
+        if (attempt < 2) {
+          await Future.delayed(const Duration(seconds: 2));
+        }
+      }
 
-      if (!hasPurchase) {
+      // If still no purchase found but email came from URL (external_reference),
+      // we trust it — the user just paid and the webhook might be delayed
+      if (!hasPurchase && !_emailIsReadonly) {
+        // Only block if the user typed the email manually (not from URL)
         if (mounted) {
           setState(() {
             _isLoading = false;
