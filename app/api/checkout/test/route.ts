@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { preferenceClient } from '@/lib/mercadopago/client';
 
 /**
@@ -10,7 +10,7 @@ import { preferenceClient } from '@/lib/mercadopago/client';
  * 
  * Access: http://localhost:3000/api/checkout/test
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const preference = await preferenceClient.create({
       body: {
