@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       id: preference.id,
       init_point: preference.init_point,
+      sandbox_init_point: preference.sandbox_init_point,
     });
   } catch (error) {
     console.error('[Checkout] Error creating preference:', error);

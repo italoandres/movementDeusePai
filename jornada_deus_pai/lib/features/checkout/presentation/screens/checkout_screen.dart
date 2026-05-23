@@ -69,7 +69,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final checkoutUrl = data['init_point'] as String?;
+        // Use sandbox_init_point for test mode, init_point for production
+        final checkoutUrl = (data['sandbox_init_point'] ?? data['init_point']) as String?;
 
         if (checkoutUrl != null) {
           final uri = Uri.parse(checkoutUrl);
