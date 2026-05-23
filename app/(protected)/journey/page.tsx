@@ -177,7 +177,7 @@ export default async function JourneyPage({
   const userMessages: UserDisplayMessage[] = (userMessagesResult.data || []).map(msg => ({
     type: 'user' as const,
     id: msg.id,
-    content: msg.content,
+    content: msg.content || '',
     created_at: msg.created_at,
   }));
 
