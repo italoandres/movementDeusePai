@@ -4,8 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
+import '../../../../shared/design/ecosystem_theme.dart';
+import '../../../../shared/widgets/contemplative_rotating_phrase.dart';
 
-/// Checkout screen - collects email and redirects directly to Mercado Pago
+/// Checkout screen — portal de entrada na jornada
+/// "Você não está comprando algo. Você está começando algo."
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
 
@@ -22,14 +25,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
   bool _isLoading = false;
   String? _error;
 
-  // Design tokens
-  static const _bgColor = Color(0xFF0D0D0D);
-  static const _goldPrimary = Color(0xFFC6A15B);
-  static const _textPrimary = Color(0xFFF5F1E8);
-  static const _textSecondary = Color(0xB3F5F1E8);
-  static const _textContemplative = Color(0x6BF5F1E8);
-
-  // API URL
   static const _apiUrl = 'https://movementdeusepai.vercel.app';
 
   @override
@@ -37,7 +32,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1800),
     );
     _fadeContent = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeIn),
@@ -52,7 +47,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
     super.dispose();
   }
 
-  Future<void> _handleCheckout() async {
+  Future<void> _handleContinue() async {
     final email = _emailController.text.trim();
 
     if (email.isEmpty || !email.contains('@')) {
@@ -66,7 +61,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
     });
 
     try {
-      // Call the real API to create Mercado Pago preference
       final response = await http.post(
         Uri.parse('$_apiUrl/api/checkout/create-preference'),
         headers: {'Content-Type': 'application/json'},
@@ -78,15 +72,14 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
         final checkoutUrl = data['init_point'] as String?;
 
         if (checkoutUrl != null) {
-          // Redirect to Mercado Pago checkout
           final uri = Uri.parse(checkoutUrl);
           if (await canLaunchUrl(uri)) {
             await launchUrl(uri, mode: LaunchMode.externalApplication);
           } else {
-            setState(() => _error = 'não foi possível abrir o pagamento');
+            setState(() => _error = 'não foi possível abrir o acesso');
           }
         } else {
-          setState(() => _error = 'erro ao criar pagamento');
+          setState(() => _error = 'erro ao preparar acesso');
         }
       } else {
         setState(() => _error = 'erro ao processar. tente novamente.');
@@ -103,125 +96,142 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bgColor,
+      backgroundColor: EcosystemTheme.background,
       body: Container(
-        decoration: BoxDecoration(
-          gradient: RadialGradient(
-            center: Alignment.topCenter,
-            radius: 1.5,
-            colors: [
-              const Color(0xFF1A121C).withOpacity(0.2),
-              _bgColor,
-            ],
-          ),
-        ),
+        decoration: EcosystemTheme.backgroundGradient,
         child: SafeArea(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Center(
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 440),
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 48),
-                child: FadeTransition(
-                  opacity: _fadeContent,
+          child: FadeTransition(
+            opacity: _fadeContent,
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Center(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 480),
+                  padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 48),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const SizedBox(height: 40),
-
-                      // Back button
+                      // Back
                       Align(
                         alignment: Alignment.centerLeft,
                         child: GestureDetector(
                           onTap: () => context.pop(),
                           child: Icon(
                             Icons.arrow_back_ios,
-                            color: _textPrimary.withOpacity(0.3),
-                            size: 20,
+                            color: EcosystemTheme.textPrimary.withOpacity(0.3),
+                            size: 18,
                           ),
                         ),
                       ),
 
                       const SizedBox(height: 60),
 
-                      // Headline
+                      // Title
                       const Text(
-                        'Esse acesso existe para quem deseja\nreconstruir sua relação com o Pai\nsem religião, medo ou performance.',
+                        'Talvez essa seja a primeira vez\nque você não está apenas tentando.',
                         style: TextStyle(
-                          color: _textPrimary,
-                          fontSize: 18,
+                          color: EcosystemTheme.textPrimary,
+                          fontSize: 22,
                           fontWeight: FontWeight.w300,
-                          letterSpacing: 0.2,
-                          height: 1.8,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-
-                      const SizedBox(height: 48),
-
-                      // Divider
-                      Container(
-                        width: 30,
-                        height: 1,
-                        color: _goldPrimary.withOpacity(0.15),
-                      ),
-
-                      const SizedBox(height: 48),
-
-                      // Price
-                      const Text(
-                        'Acesso completo — R\$57',
-                        style: TextStyle(
-                          color: _textPrimary,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w300,
+                          height: 1.7,
                           letterSpacing: 0.3,
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'ou em até 12x no Mercado Pago',
+
+                      const SizedBox(height: 24),
+
+                      // Subtitle
+                      Text(
+                        'O acesso ao "Não Ore. Fale com o Pai."\nfaz parte da jornada Deus é Pai —\num espaço criado para reconstruir\nrelacionamento, identidade e presença\ndiante do Pai.',
                         style: TextStyle(
-                          color: _textContemplative,
+                          color: EcosystemTheme.textPrimary.withOpacity(0.55),
                           fontSize: 14,
                           fontWeight: FontWeight.w300,
+                          height: 1.7,
                         ),
                         textAlign: TextAlign.center,
                       ),
 
-                      const SizedBox(height: 48),
+                      const SizedBox(height: 40),
 
-                      // Email field
-                      TextField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        style: const TextStyle(
-                          color: _textPrimary,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w300,
+                      // Rotating phrases
+                      const ContemplativeRotatingPhrase(
+                        fontSize: 15,
+                      ),
+
+                      const SizedBox(height: 60),
+
+                      // Access block
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: EcosystemTheme.gold.withOpacity(0.12),
+                          ),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        decoration: InputDecoration(
-                          hintText: 'seu melhor email',
-                          hintStyle: const TextStyle(
-                            color: _textContemplative,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w300,
-                          ),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(
-                              color: _goldPrimary.withOpacity(0.12),
+                        child: Column(
+                          children: [
+                            Text(
+                              'Seu acesso será conectado ao email abaixo.',
+                              style: TextStyle(
+                                color: EcosystemTheme.textPrimary.withOpacity(0.5),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w300,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                          ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(
-                              color: _goldPrimary.withOpacity(0.3),
+
+                            const SizedBox(height: 20),
+
+                            // Email field
+                            TextField(
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              style: const TextStyle(
+                                color: EcosystemTheme.textPrimary,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w300,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: 'seu melhor email',
+                                hintStyle: const TextStyle(
+                                  color: EcosystemTheme.textContemplative,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w300,
+                                ),
+                                enabledBorder: UnderlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: EcosystemTheme.gold.withOpacity(0.12),
+                                  ),
+                                ),
+                                focusedBorder: UnderlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: EcosystemTheme.gold.withOpacity(0.3),
+                                  ),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                  horizontal: 4,
+                                ),
+                              ),
                             ),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: 12,
-                            horizontal: 4,
-                          ),
+
+                            const SizedBox(height: 8),
+
+                            Text(
+                              'Esse será o email usado para acessar sua caminhada\ndentro do ecossistema Deus é Pai.',
+                              style: TextStyle(
+                                color: EcosystemTheme.textPrimary.withOpacity(0.3),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w300,
+                                height: 1.5,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
                         ),
                       ),
 
@@ -236,18 +246,41 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
                         ),
                       ],
 
+                      const SizedBox(height: 36),
+
+                      // Value block
+                      const Text(
+                        'Acesso completo — R\$57',
+                        style: TextStyle(
+                          color: EcosystemTheme.textPrimary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w300,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'ou em até 12x no Mercado Pago',
+                        style: TextStyle(
+                          color: EcosystemTheme.textContemplative,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w300,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+
                       const SizedBox(height: 40),
 
-                      // CTA Button
+                      // CTA
                       GestureDetector(
-                        onTap: _isLoading ? null : _handleCheckout,
+                        onTap: _isLoading ? null : _handleContinue,
                         child: Container(
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           decoration: BoxDecoration(
-                            color: _goldPrimary.withOpacity(0.08),
+                            color: EcosystemTheme.gold.withOpacity(0.06),
                             border: Border.all(
-                              color: _goldPrimary.withOpacity(0.35),
+                              color: EcosystemTheme.gold.withOpacity(0.3),
                             ),
                             borderRadius: BorderRadius.circular(30),
                           ),
@@ -258,13 +291,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
                                     height: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 1.5,
-                                      color: _goldPrimary.withOpacity(0.5),
+                                      color: EcosystemTheme.gold.withOpacity(0.5),
                                     ),
                                   )
                                 : const Text(
-                                    'pagar com mercado pago',
+                                    'continuar para o acesso',
                                     style: TextStyle(
-                                      color: _goldPrimary,
+                                      color: EcosystemTheme.gold,
                                       fontSize: 15,
                                       fontWeight: FontWeight.w300,
                                       letterSpacing: 0.5,
@@ -274,14 +307,14 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
                         ),
                       ),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 32),
 
-                      // Security note
-                      const Text(
-                        'pagamento seguro via Mercado Pago\ntodos os meios de pagamento aceitos',
+                      // Footer
+                      Text(
+                        'Pagamento seguro via Mercado Pago.\nApós a confirmação, seu acesso será liberado\nautomaticamente no ecossistema.',
                         style: TextStyle(
-                          color: _textContemplative,
-                          fontSize: 12,
+                          color: EcosystemTheme.textPrimary.withOpacity(0.25),
+                          fontSize: 11,
                           fontWeight: FontWeight.w300,
                           height: 1.6,
                         ),
