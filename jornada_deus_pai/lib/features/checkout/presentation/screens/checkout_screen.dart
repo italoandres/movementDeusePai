@@ -1,10 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:http/http.dart' as http;
 
-/// Checkout screen - collects email and redirects to Mercado Pago
-/// Contemplative design aligned with the journey experience
+/// Checkout screen - collects email and redirects directly to Mercado Pago
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
 
@@ -27,6 +28,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
   static const _textPrimary = Color(0xFFF5F1E8);
   static const _textSecondary = Color(0xB3F5F1E8);
   static const _textContemplative = Color(0x6BF5F1E8);
+
+  // API URL
+  static const _apiUrl = 'https://movementdeusepai.vercel.app';
 
   @override
   void initState() {
@@ -62,60 +66,37 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
     });
 
     try {
-      // TODO: When deployed, call the Next.js API to create preference
-      // For now, show a message that this will redirect to Mercado Pago
-      // 
-      // In production:
-      // 1. Call POST /api/checkout/create-preference with email
-      // 2. Get init_point URL back
-      // 3. Launch that URL in browser
-      //
-      // final response = await http.post(
-      //   Uri.parse('https://your-domain.vercel.app/api/checkout/create-preference'),
-      //   body: jsonEncode({'email': email}),
-      //   headers: {'Content-Type': 'application/json'},
-      // );
-      // final data = jsonDecode(response.body);
-      // await launchUrl(Uri.parse(data['init_point']));
+      // Call the real API to create Mercado Pago preference
+      final response = await http.post(
+        Uri.parse('$_apiUrl/api/checkout/create-preference'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email}),
+      );
 
-      await Future.delayed(const Duration(milliseconds: 1000));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final checkoutUrl = data['init_point'] as String?;
 
-      if (mounted) {
-        // Temporary: show confirmation that checkout will redirect
-        showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            backgroundColor: const Color(0xFF1A1A1A),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            title: const Text(
-              'Pagamento',
-              style: TextStyle(color: _textPrimary, fontWeight: FontWeight.w300),
-            ),
-            content: Text(
-              'Quando o app estiver publicado, você será redirecionado para o Mercado Pago para concluir o pagamento com segurança.\n\nEmail: $email\nValor: R\$57,00',
-              style: const TextStyle(color: _textSecondary, height: 1.6),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(ctx).pop();
-                  context.push('/obrigado');
-                },
-                child: const Text(
-                  'simular pagamento aprovado',
-                  style: TextStyle(color: _goldPrimary),
-                ),
-              ),
-            ],
-          ),
-        );
+        if (checkoutUrl != null) {
+          // Redirect to Mercado Pago checkout
+          final uri = Uri.parse(checkoutUrl);
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          } else {
+            setState(() => _error = 'não foi possível abrir o pagamento');
+          }
+        } else {
+          setState(() => _error = 'erro ao criar pagamento');
+        }
+      } else {
+        setState(() => _error = 'erro ao processar. tente novamente.');
       }
     } catch (e) {
-      setState(() => _error = 'erro ao processar. tente novamente.');
+      setState(() => _error = 'erro de conexão. tente novamente.');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
