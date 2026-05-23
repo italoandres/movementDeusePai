@@ -84581,8 +84581,8 @@ s=l.b===200?8:10
 break
 case 8:h=l
 k=B.a6.o0(A.j_(A.iZ(h.e)).bK(h.w),null)
-h=J.eJ(k,"sandbox_init_point")
-j=A.bW(h==null?J.eJ(k,"init_point"):h)
+h=J.eJ(k,"init_point")
+j=A.bW(h==null?J.eJ(k,"sandbox_init_point"):h)
 s=j!=null?11:13
 break
 case 11:i=A.c7(j,0,null)
