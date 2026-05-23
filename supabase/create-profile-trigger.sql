@@ -6,13 +6,17 @@
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, nome, email, perfil_is_complete, senha_is_seted)
+  INSERT INTO public.profiles (id, nome, email, perfil_is_complete, senha_is_seted, access_type, has_book_access, app_source, language)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'nome', 'Usuário'),
     NEW.email,
     false,
-    true
+    true,
+    'free',
+    false,
+    'journey',
+    'pt'
   );
   RETURN NEW;
 END;

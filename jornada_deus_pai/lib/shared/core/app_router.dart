@@ -19,7 +19,6 @@ import 'package:jornada_deus_pai/features/consciousness_journey/presentation/scr
 import 'package:jornada_deus_pai/features/consciousness_journey/presentation/screens/emotional_result_screen.dart';
 import 'package:jornada_deus_pai/features/consciousness_journey/presentation/screens/sales_page_screen.dart';
 import 'package:jornada_deus_pai/features/consciousness_journey/presentation/screens/free_access_screen.dart';
-import 'package:jornada_deus_pai/features/consciousness_journey/presentation/screens/create_access_screen.dart';
 import 'package:jornada_deus_pai/features/consciousness_journey/presentation/screens/access_created_screen.dart';
 import 'package:jornada_deus_pai/shared/core/app_routes.dart';
 import 'package:jornada_deus_pai/shared/services/supabase_service.dart';
@@ -39,7 +38,7 @@ class AppRouter {
       final isGoingToBook = state.matchedLocation.startsWith('/book');
 
       // Allow access to sales, checkout, thank you, book pages, journey, and home without authentication
-      if (isGoingToSales || isGoingToCheckout || isGoingToThankYou || isGoingToBook || state.matchedLocation.startsWith('/journey') || state.matchedLocation == '/' || state.matchedLocation == '/receber-carta' || state.matchedLocation == '/obrigado' || state.matchedLocation == '/criar-acesso' || state.matchedLocation == '/acesso-criado' || state.matchedLocation == '/home' || state.matchedLocation == '/livro') {
+      if (isGoingToSales || isGoingToCheckout || isGoingToThankYou || isGoingToBook || state.matchedLocation.startsWith('/journey') || state.matchedLocation == '/' || state.matchedLocation == '/receber-carta' || state.matchedLocation == '/obrigado' || state.matchedLocation == '/acesso-criado' || state.matchedLocation == '/home' || state.matchedLocation == '/livro') {
         return null;
       }
 
@@ -203,21 +202,18 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.thankYou,
         name: AppRoutes.thankYouName,
-        builder: (context, state) => const ThankYouScreen(),
+        builder: (context, state) => ThankYouScreen(
+          email: state.uri.queryParameters['external_reference'],
+        ),
       ),
 
       // Obrigado Page (alias - same as thank you, used by checkout)
       GoRoute(
         path: '/obrigado',
         name: 'obrigado',
-        builder: (context, state) => const ThankYouScreen(),
-      ),
-
-      // Create Access Page (after purchase)
-      GoRoute(
-        path: '/criar-acesso',
-        name: 'criarAcesso',
-        builder: (context, state) => const CreateAccessScreen(),
+        builder: (context, state) => ThankYouScreen(
+          email: state.uri.queryParameters['external_reference'],
+        ),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

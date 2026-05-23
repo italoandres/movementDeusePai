@@ -37,29 +37,33 @@ export async function POST(request: NextRequest) {
     const isPayment = body.type === 'payment' || typeFromQuery === 'payment' || body.action?.includes('payment');
     
     if (!isPayment) {
-      console.log('[Webhook] Not a payment notification, ignoring');
+      console.log('[Webhook] Type check: not a payment notification, ignoring');
       return NextResponse.json({ received: true });
     }
 
     if (!paymentId) {
-      console.log('[Webhook] No payment ID found');
+      console.log('[Webhook] Type check: payment type but no payment ID found');
       return NextResponse.json({ received: true });
     }
 
-    console.log('[Webhook] Processing payment:', paymentId);
+    console.log('[Webhook] Payment detected, fetching details for ID:', paymentId);
 
     // Fetch payment details from Mercado Pago API
     let payment;
     try {
       payment = await paymentClient.get({ id: Number(paymentId) });
-      console.log('[Webhook] Payment status:', payment?.status, 'Email:', payment?.payer?.email, 'ExtRef:', payment?.external_reference);
+      console.log('[Webhook] Payment fetch result:', JSON.stringify({
+        status: payment?.status,
+        email: payment?.payer?.email,
+        externalReference: payment?.external_reference,
+      }));
     } catch (mpError) {
-      console.error('[Webhook] Error fetching payment from MP:', mpError);
+      console.error('[Webhook] Payment fetch error:', mpError);
       return NextResponse.json({ received: true, error: 'mp_fetch_error' });
     }
 
     if (!payment || payment.status !== 'approved') {
-      console.log('[Webhook] Payment not approved yet:', payment?.status);
+      console.log('[Webhook] Approval check: payment not approved, status:', payment?.status);
       return NextResponse.json({ received: true, status: payment?.status });
     }
 
@@ -67,7 +71,7 @@ export async function POST(request: NextRequest) {
     const paymentIdStr = String(payment.id);
 
     if (!email) {
-      console.error('[Webhook] No email found in payment');
+      console.error('[Webhook] Email extraction: no email found in payment (external_reference or payer.email)');
       return NextResponse.json({ received: true });
     }
 
@@ -83,9 +87,11 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     if (existing) {
-      console.log('[Webhook] Already processed, skipping');
+      console.log('[Webhook] Idempotency: already processed payment', paymentIdStr, '— skipping');
       return NextResponse.json({ received: true, message: 'Already processed' });
     }
+
+    console.log('[Webhook] Idempotency: new payment, proceeding with processing');
 
     // Generate access token
     const accessToken = generateAccessToken();
@@ -102,30 +108,31 @@ export async function POST(request: NextRequest) {
         access_released: true,
         access_token: accessToken,
         token_expires_at: tokenExpiresAt,
+        book_purchased_at: new Date().toISOString(),
       });
 
     if (insertError) {
-      console.error('[Webhook] Error saving purchase:', insertError);
+      console.error('[Webhook] Purchase insert error:', insertError);
     } else {
-      console.log('[Webhook] Purchase saved successfully');
+      console.log('[Webhook] Purchase insert: saved successfully for', email);
     }
 
-    // Update profile access if profile exists
-    const { error: updateError } = await supabase
+    // Update profile access if profile exists (only guaranteed columns)
+    const { data: updateData, error: updateError } = await supabase
       .from('profiles')
       .update({
         access_type: 'book',
         has_book_access: true,
-        book_purchased_at: new Date().toISOString(),
-        payment_id: paymentIdStr,
-        payment_provider: 'mercadopago',
       })
-      .eq('email', email);
+      .eq('email', email)
+      .select('id');
 
     if (updateError) {
-      console.error('[Webhook] Error updating profile:', updateError);
+      console.error('[Webhook] Profile update error:', updateError);
+    } else if (!updateData || updateData.length === 0) {
+      console.log(`[Webhook] Profile not found for ${email} — access will be picked up on account creation via purchases table`);
     } else {
-      console.log('[Webhook] Profile updated to book access for:', email);
+      console.log(`[Webhook] ✓ Profile updated to book access for: ${email}`);
     }
 
     return NextResponse.json({ received: true, status: 'processed' });
