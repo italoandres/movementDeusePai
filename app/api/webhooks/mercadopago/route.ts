@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { paymentClient } from '@/lib/mercadopago/client';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
+import { sendAccessEmail } from '@/lib/email/send-access-email';
 
 function getSupabaseAdmin() {
   return createClient(
@@ -134,6 +135,9 @@ export async function POST(request: NextRequest) {
     } else {
       console.log(`[Webhook] ✓ Profile updated to book access for: ${email}`);
     }
+
+    // Send access email to buyer
+    await sendAccessEmail(email);
 
     return NextResponse.json({ received: true, status: 'processed' });
   } catch (error) {

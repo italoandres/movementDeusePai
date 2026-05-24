@@ -1,23 +1,19 @@
 -- ============================================
--- TRIGGER: Criar perfil automaticamente após signup
+-- TRIGGER BLINDADO: Criar perfil automaticamente após signup
+-- Nunca bloqueia o signup — usa EXCEPTION handler
 -- ============================================
 
--- Função para criar perfil quando um novo usuário é criado
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, nome, email, perfil_is_complete, senha_is_seted, access_type, has_book_access, app_source, language)
-  VALUES (
-    NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'nome', 'Usuário'),
-    NEW.email,
-    false,
-    true,
-    'free',
-    false,
-    'journey',
-    'pt'
-  );
+  BEGIN
+    INSERT INTO public.profiles (id)
+    VALUES (NEW.id);
+  EXCEPTION WHEN OTHERS THEN
+    -- Se falhar por qualquer motivo, apenas loga e continua
+    -- O ProfileService no Flutter vai garantir o profile depois
+    RAISE WARNING 'handle_new_user failed for %: %', NEW.id, SQLERRM;
+  END;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -31,4 +27,4 @@ CREATE TRIGGER on_auth_user_created
 -- ============================================
 -- COMENTÁRIO
 -- ============================================
-COMMENT ON FUNCTION public.handle_new_user() IS 'Cria automaticamente um perfil na tabela profiles quando um novo usuário é criado via Supabase Auth';
+COMMENT ON FUNCTION public.handle_new_user() IS 'Cria profile mínimo (apenas id) quando user é criado. Blindado com EXCEPTION para nunca bloquear signup. ProfileService preenche o restante.';
