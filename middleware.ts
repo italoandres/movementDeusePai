@@ -1,8 +1,10 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/middleware';
 
 /**
- * Next.js Middleware for Authentication
+ * Next.js Middleware
+ * 
+ * The entire frontend is the Flutter Web app at /app/.
+ * All non-API, non-static routes redirect to the Flutter app.
  */
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -12,34 +14,30 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Skip API routes for webhooks
+  // Allow API routes
   if (pathname.startsWith('/api/')) {
     return NextResponse.next();
   }
 
-  // Skip public routes
-  const publicRoutes = ['/login', '/signup', '/'];
-  if (publicRoutes.includes(pathname)) {
+  // Allow static files and Next.js internals
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/favicon') ||
+    pathname.includes('.')
+  ) {
     return NextResponse.next();
   }
 
-  // For protected routes, check auth
-  const { supabase, response } = await createClient(request);
-  const { data: { user }, error } = await supabase.auth.getUser();
-
-  if (error || !user) {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
-    return Response.redirect(loginUrl);
-  }
-
-  return response;
+  // REDIRECT everything else to the Flutter app
+  // The Flutter app handles all routing via hash: /app/#/route
+  const url = request.nextUrl.clone();
+  url.pathname = '/app/';
+  return NextResponse.redirect(url);
 }
 
 export const config = {
   matcher: [
-    // Only match specific protected routes, NOT /app
-    '/journey/:path*',
-    '/profile/:path*',
+    // Match all routes except /app, /api, and static files
+    '/((?!app|api|_next/static|_next/image|favicon.ico).*)',
   ],
 };
