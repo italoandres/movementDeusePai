@@ -157,7 +157,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           )
                         : const Text('Entrar'),
                   ),
-                  const SizedBox(height: AppTheme.spacing16),
+                  const SizedBox(height: AppTheme.spacing8),
+
+                  // Forgot Password Link
+                  TextButton(
+                    onPressed: isLoading
+                        ? null
+                        : () => context.push('/esqueci-senha'),
+                    child: Text(
+                      'Esqueci minha senha',
+                      style: TextStyle(
+                        color: Colors.grey[500],
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.spacing8),
 
                   // Sign Up Link
                   TextButton(

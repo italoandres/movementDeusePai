@@ -20,6 +20,7 @@ import 'package:jornada_deus_pai/features/consciousness_journey/presentation/scr
 import 'package:jornada_deus_pai/features/consciousness_journey/presentation/screens/sales_page_screen.dart';
 import 'package:jornada_deus_pai/features/consciousness_journey/presentation/screens/free_access_screen.dart';
 import 'package:jornada_deus_pai/features/consciousness_journey/presentation/screens/access_created_screen.dart';
+import 'package:jornada_deus_pai/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:jornada_deus_pai/shared/core/app_routes.dart';
 import 'package:jornada_deus_pai/shared/services/supabase_service.dart';
 
@@ -38,7 +39,7 @@ class AppRouter {
       final isGoingToBook = state.matchedLocation.startsWith('/book');
 
       // Allow access to sales, checkout, thank you, book pages, journey, and home without authentication
-      if (isGoingToSales || isGoingToCheckout || isGoingToThankYou || isGoingToBook || state.matchedLocation.startsWith('/journey') || state.matchedLocation == '/' || state.matchedLocation == '/receber-carta' || state.matchedLocation == '/obrigado' || state.matchedLocation == '/acesso-criado' || state.matchedLocation == '/home' || state.matchedLocation == '/livro') {
+      if (isGoingToSales || isGoingToCheckout || isGoingToThankYou || isGoingToBook || state.matchedLocation.startsWith('/journey') || state.matchedLocation == '/' || state.matchedLocation == '/receber-carta' || state.matchedLocation == '/obrigado' || state.matchedLocation == '/acesso-criado' || state.matchedLocation == '/home' || state.matchedLocation == '/livro' || state.matchedLocation == '/esqueci-senha') {
         return null;
       }
 
@@ -182,6 +183,13 @@ class AppRouter {
         path: AppRoutes.signup,
         name: AppRoutes.signupName,
         builder: (context, state) => const SignupScreen(),
+      ),
+
+      // Forgot Password
+      GoRoute(
+        path: '/esqueci-senha',
+        name: 'forgotPassword',
+        builder: (context, state) => const ForgotPasswordScreen(),
       ),
 
       // Sales Landing Page (accessible without authentication)
