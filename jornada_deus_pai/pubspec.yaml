@@ -50,7 +50,7 @@ dependencies:
   flutter_markdown: ^0.6.0
   
   # Local Storage
-  shared_preferences: ^2.2.0
+  shared_preferences: ^2.5.5
   
   # HTTP Client
   http: ^1.2.0
