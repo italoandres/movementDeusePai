@@ -1,11 +1,11 @@
+import 'dart:html' as html;
+import 'dart:ui_web' as ui_web;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:video_player/video_player.dart';
 
-/// Carta de um Órfão — Immersive video experience
-/// Full-screen contemplative video player
-/// After video ends: shows CTA to continue the journey
+/// Carta de um Órfão — Immersive video experience (Web-optimized)
+/// Uses HTML5 video element directly for best web compatibility
 class CartaScreen extends ConsumerStatefulWidget {
   const CartaScreen({super.key});
 
@@ -14,16 +14,16 @@ class CartaScreen extends ConsumerStatefulWidget {
 }
 
 class _CartaScreenState extends ConsumerState<CartaScreen> {
-  late VideoPlayerController _controller;
-  bool _isInitialized = false;
   bool _showCTA = false;
-  bool _showControls = true;
+  bool _isPlaying = false;
+  bool _isLoaded = false;
+  late html.VideoElement _videoElement;
+  final String _viewId = 'carta-video-player';
 
   // Design tokens
   static const _bgColor = Color(0xFF0D0D0D);
   static const _goldPrimary = Color(0xFFC6A15B);
   static const _textPrimary = Color(0xFFF5F1E8);
-  static const _textContemplative = Color(0x6BF5F1E8);
 
   static const _videoUrl =
       'https://frtwqdpgslykzxeebmtw.supabase.co/storage/v1/object/public/media/a-carta-de-um-orfao.mp4';
@@ -31,73 +31,63 @@ class _CartaScreenState extends ConsumerState<CartaScreen> {
   @override
   void initState() {
     super.initState();
-    _initVideo();
+    _setupVideo();
   }
 
-  Future<void> _initVideo() async {
-    _controller = VideoPlayerController.networkUrl(Uri.parse(_videoUrl));
+  void _setupVideo() {
+    _videoElement = html.VideoElement()
+      ..src = _videoUrl
+      ..autoplay = true
+      ..controls = false
+      ..muted = false
+      ..style.width = '100%'
+      ..style.height = '100%'
+      ..style.objectFit = 'contain'
+      ..style.backgroundColor = '#0D0D0D'
+      ..setAttribute('playsinline', 'true')
+      ..setAttribute('webkit-playsinline', 'true');
 
-    try {
-      await _controller.initialize();
-      _controller.addListener(_onVideoProgress);
+    _videoElement.onCanPlay.listen((_) {
       if (mounted) {
-        setState(() => _isInitialized = true);
-        _controller.play();
-        // Hide controls after 3 seconds
-        Future.delayed(const Duration(seconds: 3), () {
-          if (mounted && _controller.value.isPlaying) {
-            setState(() => _showControls = false);
-          }
+        setState(() {
+          _isLoaded = true;
+          _isPlaying = true;
         });
       }
-    } catch (e) {
-      print('[CartaScreen] Error initializing video: $e');
-    }
-  }
+    });
 
-  void _onVideoProgress() {
-    if (!mounted) return;
-    final position = _controller.value.position;
-    final duration = _controller.value.duration;
+    _videoElement.onPlay.listen((_) {
+      if (mounted) setState(() => _isPlaying = true);
+    });
 
-    if (duration.inSeconds > 0 &&
-        position.inSeconds >= duration.inSeconds - 1 &&
-        !_showCTA) {
-      setState(() => _showCTA = true);
-      _controller.pause();
-    }
+    _videoElement.onPause.listen((_) {
+      if (mounted) setState(() => _isPlaying = false);
+    });
+
+    _videoElement.onEnded.listen((_) {
+      if (mounted) setState(() => _showCTA = true);
+    });
+
+    // Register the view
+    ui_web.platformViewRegistry.registerViewFactory(
+      _viewId,
+      (int viewId) => _videoElement,
+    );
   }
 
   @override
   void dispose() {
-    _controller.removeListener(_onVideoProgress);
-    _controller.dispose();
+    _videoElement.pause();
+    _videoElement.remove();
     super.dispose();
   }
 
-  void _toggleControls() {
-    setState(() => _showControls = !_showControls);
-    if (_showControls) {
-      Future.delayed(const Duration(seconds: 3), () {
-        if (mounted && _controller.value.isPlaying) {
-          setState(() => _showControls = false);
-        }
-      });
-    }
-  }
-
   void _togglePlayPause() {
-    if (_controller.value.isPlaying) {
-      _controller.pause();
+    if (_videoElement.paused) {
+      _videoElement.play();
     } else {
-      _controller.play();
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted && _controller.value.isPlaying) {
-          setState(() => _showControls = false);
-        }
-      });
+      _videoElement.pause();
     }
-    setState(() {});
   }
 
   @override
@@ -106,114 +96,105 @@ class _CartaScreenState extends ConsumerState<CartaScreen> {
 
     return Scaffold(
       backgroundColor: _bgColor,
-      body: GestureDetector(
-        onTap: _toggleControls,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // Video
-            if (_isInitialized)
-              Center(
-                child: AspectRatio(
-                  aspectRatio: _controller.value.aspectRatio,
-                  child: VideoPlayer(_controller),
-                ),
-              )
-            else
-              const Center(
-                child: CircularProgressIndicator(
-                  color: _goldPrimary,
-                  strokeWidth: 1.5,
-                ),
-              ),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Video (HTML5 native)
+          HtmlElementView(viewType: _viewId),
 
-            // Controls overlay
-            if (_showControls && _isInitialized)
-              Container(
-                color: Colors.black.withOpacity(0.3),
-                child: SafeArea(
-                  child: Column(
-                    children: [
-                      // Top bar
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
+          // Loading indicator
+          if (!_isLoaded)
+            const Center(
+              child: CircularProgressIndicator(
+                color: _goldPrimary,
+                strokeWidth: 1.5,
+              ),
+            ),
+
+          // Top bar with back button
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => context.go('/home'),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: _bgColor.withOpacity(0.5),
+                          shape: BoxShape.circle,
                         ),
-                        child: Row(
-                          children: [
-                            GestureDetector(
-                              onTap: () => context.go('/home'),
-                              child: Icon(
-                                Icons.arrow_back_ios,
-                                color: _textPrimary.withOpacity(0.7),
-                                size: 20,
-                              ),
-                            ),
-                            const Spacer(),
-                            Text(
-                              'A Carta de um Órfão',
-                              style: TextStyle(
-                                color: _textPrimary.withOpacity(0.7),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w300,
-                              ),
-                            ),
-                            const Spacer(),
-                            const SizedBox(width: 20),
-                          ],
+                        child: Icon(
+                          Icons.arrow_back_ios_new,
+                          color: _textPrimary.withOpacity(0.7),
+                          size: 18,
                         ),
                       ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _bgColor.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'A Carta de um Órfão',
+                        style: TextStyle(
+                          color: _textPrimary.withOpacity(0.7),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w300,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    const SizedBox(width: 34),
+                  ],
+                ),
+              ),
+            ),
+          ),
 
-                      const Spacer(),
-
-                      // Play/Pause button
-                      GestureDetector(
-                        onTap: _togglePlayPause,
+          // Tap to play/pause overlay
+          if (_isLoaded)
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: _togglePlayPause,
+                behavior: HitTestBehavior.translucent,
+                child: !_isPlaying
+                    ? Center(
                         child: Container(
                           width: 64,
                           height: 64,
                           decoration: BoxDecoration(
-                            color: _bgColor.withOpacity(0.5),
+                            color: _bgColor.withOpacity(0.6),
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: _goldPrimary.withOpacity(0.3),
                             ),
                           ),
-                          child: Icon(
-                            _controller.value.isPlaying
-                                ? Icons.pause
-                                : Icons.play_arrow,
+                          child: const Icon(
+                            Icons.play_arrow,
                             color: _goldPrimary,
                             size: 32,
                           ),
                         ),
-                      ),
-
-                      const Spacer(),
-
-                      // Progress bar
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 16,
-                        ),
-                        child: VideoProgressIndicator(
-                          _controller,
-                          allowScrubbing: true,
-                          colors: VideoProgressColors(
-                            playedColor: _goldPrimary.withOpacity(0.7),
-                            bufferedColor: _goldPrimary.withOpacity(0.15),
-                            backgroundColor: _textPrimary.withOpacity(0.05),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                      )
+                    : const SizedBox.shrink(),
               ),
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }
@@ -275,7 +256,6 @@ class _CartaScreenState extends ConsumerState<CartaScreen> {
 
                   const SizedBox(height: 48),
 
-                  // CTA Button - go to sales
                   GestureDetector(
                     onTap: () => context.push('/journey/sales'),
                     child: Container(
@@ -304,12 +284,11 @@ class _CartaScreenState extends ConsumerState<CartaScreen> {
 
                   const SizedBox(height: 32),
 
-                  // Replay
                   GestureDetector(
                     onTap: () {
                       setState(() => _showCTA = false);
-                      _controller.seekTo(Duration.zero);
-                      _controller.play();
+                      _videoElement.currentTime = 0;
+                      _videoElement.play();
                     },
                     child: Text(
                       'assistir novamente',
