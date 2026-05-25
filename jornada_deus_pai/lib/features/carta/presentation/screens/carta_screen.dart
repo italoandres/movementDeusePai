@@ -218,28 +218,35 @@ class _CartaScreenState extends ConsumerState<CartaScreen>
 
   void _scheduleHideControls() {
     _hideControlsTimer?.cancel();
-    _hideControlsTimer = Timer(const Duration(seconds: 4), () {
+    _hideControlsTimer = Timer(const Duration(seconds: 3), () {
       if (mounted && _isPlaying) {
-        _controlsFadeController.reverse();
-        setState(() => _showControls = false);
+        _controlsFadeController.reverse().then((_) {
+          if (mounted) setState(() => _showControls = false);
+        });
       }
     });
   }
 
   void _toggleControls() {
-    if (_showControls) {
-      _controlsFadeController.reverse();
-      setState(() => _showControls = false);
-    } else {
+    // Tap: pausa o vídeo e mostra controles
+    if (!_showControls) {
+      _videoElement.pause();
       setState(() => _showControls = true);
       _controlsFadeController.forward();
-      _scheduleHideControls();
+    } else {
+      // Se já está mostrando, esconde e volta a tocar
+      _controlsFadeController.reverse().then((_) {
+        if (mounted) setState(() => _showControls = false);
+      });
+      _videoElement.play();
     }
   }
 
   void _togglePlayPause() {
     if (_videoElement.paused) {
       _videoElement.play();
+      // Esconde controles após 3 segundos ao dar play
+      _scheduleHideControls();
     } else {
       _videoElement.pause();
     }
@@ -432,24 +439,28 @@ class _CartaScreenState extends ConsumerState<CartaScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Frase contemplativa rotativa
-            FadeTransition(
-              opacity: _phraseFade,
-              child: Text(
-                _phrases[_currentPhraseIndex],
-                style: TextStyle(
-                  color: _goldPrimary.withOpacity(0.45),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w300,
-                  fontStyle: FontStyle.italic,
-                  height: 1.6,
-                  letterSpacing: 0.3,
+            // Frase contemplativa rotativa (esquerda, mais abaixo)
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: FadeTransition(
+                opacity: _phraseFade,
+                child: Text(
+                  _phrases[_currentPhraseIndex],
+                  style: TextStyle(
+                    color: _goldPrimary.withOpacity(0.45),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w300,
+                    fontStyle: FontStyle.italic,
+                    height: 1.6,
+                    letterSpacing: 0.3,
+                  ),
+                  textAlign: TextAlign.left,
                 ),
-                textAlign: TextAlign.center,
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 28),
 
             // Controles minimalistas
             Row(
