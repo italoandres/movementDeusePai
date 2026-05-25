@@ -289,44 +289,50 @@ class _CartaScreenState extends ConsumerState<CartaScreen>
 
     return Scaffold(
       backgroundColor: _bgColor,
-      body: GestureDetector(
-        onTap: _toggleControls,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // Video
-            HtmlElementView(viewType: _viewId),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Video (camada base)
+          HtmlElementView(viewType: _viewId),
 
-            // Loading
-            if (!_isLoaded)
-              const Center(
-                child: CircularProgressIndicator(
-                  color: _goldPrimary,
-                  strokeWidth: 1.5,
-                ),
+          // Overlay transparente que captura taps (por cima do vídeo HTML)
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: _toggleControls,
+              behavior: HitTestBehavior.opaque,
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+
+          // Loading
+          if (!_isLoaded)
+            const Center(
+              child: CircularProgressIndicator(
+                color: _goldPrimary,
+                strokeWidth: 1.5,
               ),
+            ),
 
-            // Resume prompt
-            if (_showResumePrompt) _buildResumePrompt(),
+          // Resume prompt
+          if (_showResumePrompt) _buildResumePrompt(),
 
-            // Bottom contemplative area
-            if (_isLoaded && !_showResumePrompt)
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: _buildContemplativeArea(),
-              ),
-
-            // Top bar (always subtle)
+          // Bottom contemplative area
+          if (_isLoaded && !_showResumePrompt && _showControls)
             Positioned(
-              top: 0,
+              bottom: 0,
               left: 0,
               right: 0,
-              child: _buildTopBar(context),
+              child: _buildContemplativeArea(),
             ),
-          ],
-        ),
+
+          // Top bar (always subtle)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: _buildTopBar(context),
+          ),
+        ],
       ),
     );
   }
@@ -440,7 +446,7 @@ class _CartaScreenState extends ConsumerState<CartaScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             // Frase contemplativa rotativa (esquerda, mais abaixo)
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             Align(
               alignment: Alignment.centerLeft,
               child: FadeTransition(
@@ -460,7 +466,7 @@ class _CartaScreenState extends ConsumerState<CartaScreen>
               ),
             ),
 
-            const SizedBox(height: 28),
+            const SizedBox(height: 32),
 
             // Controles minimalistas
             Row(
