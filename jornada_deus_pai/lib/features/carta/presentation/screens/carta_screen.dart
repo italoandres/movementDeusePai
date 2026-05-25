@@ -184,7 +184,9 @@ class _CartaScreenState extends ConsumerState<CartaScreen>
 
   Future<void> _loadSavedPosition() async {
     final prefs = await SharedPreferences.getInstance();
-    _savedPosition = prefs.getDouble('carta_position') ?? 0.0;
+    final user = Supabase.instance.client.auth.currentUser;
+    final key = user != null ? 'carta_position_${user.id}' : 'carta_position_anon';
+    _savedPosition = prefs.getDouble(key) ?? 0.0;
   }
 
   void _checkSavedPosition() {
@@ -209,12 +211,16 @@ class _CartaScreenState extends ConsumerState<CartaScreen>
 
   Future<void> _savePosition() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('carta_position', _videoElement.currentTime.toDouble());
+    final user = Supabase.instance.client.auth.currentUser;
+    final key = user != null ? 'carta_position_${user.id}' : 'carta_position_anon';
+    await prefs.setDouble(key, _videoElement.currentTime.toDouble());
   }
 
   Future<void> _clearSavedPosition() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('carta_position');
+    final user = Supabase.instance.client.auth.currentUser;
+    final key = user != null ? 'carta_position_${user.id}' : 'carta_position_anon';
+    await prefs.remove(key);
   }
 
   void _startProgressTracking() {

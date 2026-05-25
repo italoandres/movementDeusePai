@@ -77,6 +77,28 @@ class _BookHomePageState extends ConsumerState<BookHomePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // Back button to main home
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: GestureDetector(
+                          onTap: () => context.go('/home'),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0D0D0D).withOpacity(0.4),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.arrow_back_ios_new,
+                              color: const Color(0xFFF5F1E8).withOpacity(0.5),
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
                       // Header
                       BookHeader(isMobile: isMobile),
                       
