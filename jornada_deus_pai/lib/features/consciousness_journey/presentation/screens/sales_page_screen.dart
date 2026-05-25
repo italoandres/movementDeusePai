@@ -449,7 +449,7 @@ class SalesPageScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(30),
             ),
             child: const Text(
-              'quero começar essa caminhada',
+              'quero continuar essa caminhada',
               style: TextStyle(
                 color: _goldPrimary,
                 fontSize: 16,

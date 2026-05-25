@@ -458,7 +458,7 @@ class _CartaScreenState extends ConsumerState<CartaScreen>
 
   Widget _buildContemplativeArea() {
     return Container(
-      padding: const EdgeInsets.only(bottom: 40, left: 24, right: 24, top: 40),
+      padding: const EdgeInsets.only(bottom: 56, left: 24, right: 24, top: 40),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,

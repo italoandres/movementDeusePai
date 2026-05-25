@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../shared/design/ecosystem_theme.dart';
 import '../../../../shared/widgets/contemplative_rotating_phrase.dart';
 
@@ -38,6 +39,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
       CurvedAnimation(parent: _controller, curve: Curves.easeIn),
     );
     _controller.forward();
+
+    // Auto-preencher email se user já está autenticado (fluxo interno)
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user != null && user.email != null) {
+      _emailController.text = user.email!;
+    }
   }
 
   @override
