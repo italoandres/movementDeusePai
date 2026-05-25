@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     const resend = new Resend(resendKey);
-    const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://movementdeusepai.vercel.app';
+    const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://nosecreto.vercel.app';
     const accessLink = `${APP_URL}/app/#/obrigado?external_reference=${encodeURIComponent(email)}`;
 
     const { data, error } = await resend.emails.send({

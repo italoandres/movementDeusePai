@@ -100,7 +100,7 @@ class ProfileService {
       print('[ProfileService] Validating purchase for: $email');
 
       final response = await http.post(
-        Uri.parse('https://movementdeusepai.vercel.app/api/checkout/validate-purchase'),
+        Uri.parse('https://nosecreto.vercel.app/api/checkout/validate-purchase'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email}),
       );

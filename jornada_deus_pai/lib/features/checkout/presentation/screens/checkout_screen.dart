@@ -26,7 +26,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
   bool _isLoading = false;
   String? _error;
 
-  static const _apiUrl = 'https://movementdeusepai.vercel.app';
+  static const _apiUrl = 'https://nosecreto.vercel.app';
 
   @override
   void initState() {

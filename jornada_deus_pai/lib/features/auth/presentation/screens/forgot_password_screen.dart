@@ -66,7 +66,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     try {
       await Supabase.instance.client.auth.resetPasswordForEmail(
         email,
-        redirectTo: 'https://movementdeusepai.vercel.app/app/#/home',
+        redirectTo: 'https://nosecreto.vercel.app/app/#/home',
       );
 
       if (mounted) {

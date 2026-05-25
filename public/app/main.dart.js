@@ -85842,7 +85842,7 @@ p=4
 m=$.fk().b
 m===$&&A.b()
 s=7
-return A.u(m.gdn().wl(k,"https://movementdeusepai.vercel.app/app/#/home"),$async$y9)
+return A.u(m.gdn().wl(k,"https://nosecreto.vercel.app/app/#/home"),$async$y9)
 case 7:if(n.c!=null)n.O(new A.aup(n))
 p=2
 s=6
@@ -87257,7 +87257,7 @@ if(J.bH(d)===0||!J.jE(d,"@")){m.O(new A.asu(m))
 s=1
 break}m.O(new A.asv(m))
 p=4
-h=A.ci("https://movementdeusepai.vercel.app/api/checkout/create-preference",0,null)
+h=A.ci("https://nosecreto.vercel.app/api/checkout/create-preference",0,null)
 g=t.N
 f=A.ac(["Content-Type","application/json"],g,g)
 s=7
@@ -88517,7 +88517,7 @@ aw9(a){var s=0,r=A.z(t.y),q,p=2,o=[],n,m,l,k,j,i,h,g,f
 var $async$CQ=A.A(function(b,c){if(b===1){o.push(c)
 s=p}while(true)switch(s){case 0:p=4
 A.jC("[ProfileService] Validating purchase for: "+a)
-j=A.ci("https://movementdeusepai.vercel.app/api/checkout/validate-purchase",0,null)
+j=A.ci("https://nosecreto.vercel.app/api/checkout/validate-purchase",0,null)
 i=t.N
 h=A.ac(["Content-Type","application/json"],i,i)
 s=7
